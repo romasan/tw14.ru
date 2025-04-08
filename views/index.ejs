@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <title>Streamagic</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        sup {
+            font-size: 12pt;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <h1>Streamagic<sup>ver. 0.0.1</sup></h1>
+    <form action="/start-stream" method="post" enctype="multipart/form-data">
+        <table>
+            <tr>
+                <td>
+                    <label for="image">Картинка для стрима</label>
+                </td>
+                <td>
+                    <input type="file" name="image" id="image" accept="image/png, image/jpeg" required>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="hostPath">Cервер/Ключ</label>
+                </td>
+                <td>
+                    <input type="text" name="hostPath" id="hostPath" placeholder="rtmp://somehost.ru/input/1234567890abcdefgh" value="rtmp://[хост]/[ключ]" size="70" required>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="radio">Аудиопоток</label>
+                </td>
+                <td>
+                    <input type="text" name="radio" id="radio" placeholder="http://stream.antenne.de:80/antenne" value="http://stream.antenne.de:80/antenne" size="70" required>
+                </td>
+            </tr>
+
+        </table>
+        <button type="submit">Запустить стрим</button>
+    </form>
+
+    <% if(streams.length >= maxStreams){ %>
+        <div>Запущено максимальное количество стримов</div>
+    <% } %>
+
+    <% if(streams.length > 0){ %>
+        <h2>Запущенные стримы</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Превью</th>
+                    <th>Стрим</th>
+                    <th>Стоп</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% streams.forEach(stream => { %>
+                    <tr>
+                        <td>
+                            <img src="/<%= stream.imagePath %>" alt="Preview" style="width: 100px; height: auto;">
+                        </td>
+                        <td><%= stream.hostPath %></td>
+                        <td>
+                            <form action="/stop-stream/<%= stream.id %>" method="post" style="display:inline;">
+                                <button type="submit">&times;</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+</body>
+</html>

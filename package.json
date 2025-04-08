@@ -1,0 +1,23 @@
+{
+  "name": "tw14.ru",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "start": "pm2 start node index.js",
+    "dev": "node index.js",
+    "stop": "pm2 stop index",
+    "logs": "pm2 log"
+  },
+  "author": "Roman Bauer",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "multer": "^1.4.5-lts.2",
+    "pm2": "^6.0.5",
+    "sharp": "^0.34.1",
+    "tree-kill": "^1.2.2"
+  }
+}
