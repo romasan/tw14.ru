@@ -65,7 +65,7 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 
 	try {
 		await sharp(originalImagePath)
-			.resize(1280, 720, {
+			.resize(640, 360, {
 				fit: 'contain',
 				background: { r: 0, g: 0, b: 0, alpha: 1 }
 			})
@@ -89,10 +89,12 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 		'-i', processedImagePath,
 		'-i', radio,
 		'-vcodec', 'libx264',
+		'-preset', 'veryfast',
 		'-pix_fmt', 'yuv420p',
-		'-preset', 'slow',
 		'-r', '15',
 		'-g', '30',
+		'-b:v', '500k',
+		'-s', '640x360',
 		'-f', 'flv',
 		hostPath,
 	]);
