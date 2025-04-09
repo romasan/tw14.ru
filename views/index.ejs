@@ -13,6 +13,9 @@
             font-size: 12pt;
             color: #777;
         }
+        .failed {
+            opacity: .5;
+        }
     </style>
 </head>
 <body>
@@ -64,7 +67,11 @@
             </thead>
             <tbody>
                 <% streams.forEach(stream => { %>
-                    <tr>
+                    <tr
+                        <% if(stream.failed){ %>
+                            class="failed"
+                        <% } %>
+                    >
                         <td>
                             <img src="/<%= stream.imagePath %>" alt="Preview" style="width: 100px; height: auto;">
                         </td>

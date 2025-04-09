@@ -101,20 +101,33 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 
 	console.log('Start stream to:', hostPath);
 
-	ffmpegProcess.on('error', (err) => {
-		console.error('Failed to start ffmpeg:', err);
-	});
-
-	ffmpegProcess.on('close', (code) => {
-		console.log(`ffmpeg process exited with code ${code}`);
-	});
-
 	const stream = {
 		id: Date.now(),
 		imagePath,
 		hostPath: maskHP(hostPath),
-		process: ffmpegProcess
+		process: ffmpegProcess,
+		failed: false,
 	};
+
+	ffmpegProcess.on('error', (err) => {
+		console.error('Failed to start ffmpeg:', err);
+
+		const streamIndex = streams.findIndex(s => s.id === stream.id);
+
+		if (streamIndex >= 0) {
+			streams[streamIndex].failed = true;
+		}
+	});
+
+	ffmpegProcess.on('close', (code) => {
+		console.log(`ffmpeg process exited with code ${code}`);
+
+		const streamIndex = streams.findIndex(s => s.id === stream.id);
+
+		if (streamIndex >= 0) {
+			streams[streamIndex].failed = true;
+		}
+	});
 
 	streams.push(stream);
 
@@ -125,7 +138,7 @@ app.post('/stop-stream/:id', (req, res) => {
 	const streamId = parseInt(req.params.id, 10);
 	const streamIndex = streams.findIndex(s => s.id === streamId);
 
-	if (streamIndex !== -1) {
+	if (streamIndex >= 0) {
 		const stream = streams[streamIndex];
 
 		kill(stream.process.pid, 'SIGTERM', (err) => {
