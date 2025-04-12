@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <h1>Streamagic<sup>ver. 0.0.1</sup></h1>
+    <h1>Streamagic<sup>ver. 0.0.2</sup></h1>
     <form action="/start-stream" method="post" enctype="multipart/form-data">
         <table>
             <tr>
@@ -58,13 +58,6 @@
     <% if(streams.length > 0){ %>
         <h2>Запущенные стримы</h2>
         <table border="1">
-            <thead>
-                <tr>
-                    <th>Превью</th>
-                    <th>Стрим</th>
-                    <th>Стоп</th>
-                </tr>
-            </thead>
             <tbody>
                 <% streams.forEach(stream => { %>
                     <tr
@@ -75,11 +68,14 @@
                         <td>
                             <img src="/<%= stream.imagePath %>" alt="Preview" style="width: 100px; height: auto;">
                         </td>
-                        <td><%= stream.hostPath %></td>
+                        <td><%= stream.title %></td>
                         <td>
                             <form action="/stop-stream/<%= stream.id %>" method="post" style="display:inline;">
                                 <button type="submit">&times;</button>
                             </form>
+                            <!--<form action="/reload-stream/<%= stream.id %>" method="post" style="display:inline;">
+                                <button type="submit">&#x21bb;</button>
+                            </form>-->
                         </td>
                     </tr>
                 <% }) %>

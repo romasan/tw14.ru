@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
-const { spawn } = require('child_process');
+const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
@@ -83,28 +83,26 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 		return;
 	}
 
-	const ffmpegProcess = spawn('ffmpeg', [
-		'-framerate', '15',
-		'-re', '-loop', '1',
-		'-i', processedImagePath,
-		'-i', radio,
-		'-vcodec', 'libx264',
-		'-preset', 'veryfast',
-		'-pix_fmt', 'yuv420p',
-		'-r', '15',
-		'-g', '30',
-		'-b:v', '500k',
-		'-s', '640x360',
-		'-f', 'flv',
-		hostPath,
-	]);
+	const scriptPath = path.join(__dirname, 'start_stream.sh');
+	const command = `bash ${scriptPath} "${processedImagePath}" "${radio}" "${hostPath}"`;
+
+	const ffmpegProcess = exec(command, { env: process.env }, (error, stdout, stderr) => {
+		if (error) {
+			console.error(`exec error: ${error}`);
+			return;
+		}
+		console.log(`stdout: ${stdout}`);
+		console.error(`stderr: ${stderr}`);
+	});
 
 	console.log('Start stream to:', hostPath);
 
 	const stream = {
 		id: Date.now(),
 		imagePath,
-		hostPath: maskHP(hostPath),
+		processedImagePath,
+		title: maskHP(hostPath),
+		hostPath,
 		process: ffmpegProcess,
 		failed: false,
 	};
@@ -150,12 +148,27 @@ app.post('/stop-stream/:id', (req, res) => {
 				fs.unlink(stream.imagePath, (err) => {
 					if (err) console.error('Failed to delete image:', err);
 				});
+				fs.unlink(stream.processedImagePath, (err) => {
+					if (err) console.error('Failed to delete image:', err);
+				});
 				streams.splice(streamIndex, 1);
 				res.redirect('/');
 			}
 		});
 	}
 });
+
+// TODO
+// app.post('/reload-stream/:id', (req, res) => {
+// 	const streamId = parseInt(req.params.id, 10);
+// 	const streamIndex = streams.findIndex(s => s.id === streamId);
+
+// 	if (streamIndex >= 0) {
+// 		const stream = streams[streamIndex];
+// 		// kill
+// 		// start
+// 	}
+// });
 
 const PORT = process.env.PORT || 3000;
 

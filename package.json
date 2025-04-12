@@ -1,11 +1,11 @@
 {
   "name": "tw14.ru",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start node index.js",
+    "start": "pm2 start node index.js --name tw14",
     "dev": "node index.js",
-    "stop": "pm2 stop index",
+    "stop": "pm2 stop tw14",
     "logs": "pm2 log"
   },
   "author": "Roman Bauer",
