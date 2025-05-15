@@ -24,6 +24,22 @@ const maskHP = (url) => url
 	)
 	.join('/');
 
+const killStream = (stream, success, failed) => {
+	try {
+		kill(stream.process.pid, 'SIGTERM', (err) => {
+			if (err) {
+				console.error('Failed to kill process:', err);
+				failed && failed();
+			} else {
+				console.log(`Process ${stream.process.pid} killed`);
+				success && success();
+			}
+		});
+	} catch (err) {
+		console.log('Kill stream error:', err);
+	}
+};
+
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -88,11 +104,8 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 
 	const ffmpegProcess = exec(command, { env: process.env }, (error, stdout, stderr) => {
 		if (error) {
-			console.error(`exec error: ${error}`);
-			return;
+			console.error(`exec error #2: ${error}`);
 		}
-		console.log(`stdout: ${stdout}`);
-		console.error(`stderr: ${stderr}`);
 	});
 
 	console.log('Start stream to:', hostPath);
@@ -103,23 +116,13 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 		processedImagePath,
 		title: maskHP(hostPath),
 		hostPath,
+		radio,
 		process: ffmpegProcess,
 		failed: false,
+		paused: false,
 	};
 
 	ffmpegProcess.on('error', (err) => {
-		console.error('Failed to start ffmpeg:', err);
-
-		const streamIndex = streams.findIndex(s => s.id === stream.id);
-
-		if (streamIndex >= 0) {
-			streams[streamIndex].failed = true;
-		}
-	});
-
-	ffmpegProcess.on('close', (code) => {
-		console.log(`ffmpeg process exited with code ${code}`);
-
 		const streamIndex = streams.findIndex(s => s.id === stream.id);
 
 		if (streamIndex >= 0) {
@@ -139,39 +142,61 @@ app.post('/stop-stream/:id', (req, res) => {
 	if (streamIndex >= 0) {
 		const stream = streams[streamIndex];
 
-		kill(stream.process.pid, 'SIGTERM', (err) => {
-			if (err) {
-				console.error('Failed to kill process:', err);
-				res.redirect('/');
-			} else {
-				console.log(`Process ${stream.process.pid} killed`);
-				fs.unlink(stream.imagePath, (err) => {
-					if (err) console.error('Failed to delete image:', err);
-				});
-				fs.unlink(stream.processedImagePath, (err) => {
-					if (err) console.error('Failed to delete image:', err);
-				});
-				streams.splice(streamIndex, 1);
-				res.redirect('/');
-			}
+		killStream(stream, () => {
+			fs.unlink(stream.imagePath, (err) => {
+				if (err) console.error('Failed to delete image:', err);
+			});
+			fs.unlink(stream.processedImagePath, (err) => {
+				if (err) console.error('Failed to delete image:', err);
+			});
+			streams.splice(streamIndex, 1);
+			res.redirect('/');
+		}, () => {
+			res.redirect('/');
 		});
 	}
 });
 
-// TODO
-// app.post('/reload-stream/:id', (req, res) => {
-// 	const streamId = parseInt(req.params.id, 10);
-// 	const streamIndex = streams.findIndex(s => s.id === streamId);
+app.post('/pause-stream/:id', (req, res) => {
+	const streamId = parseInt(req.params.id, 10);
+	const streamIndex = streams.findIndex(s => s.id === streamId);
 
-// 	if (streamIndex >= 0) {
-// 		const stream = streams[streamIndex];
-// 		// kill
-// 		// start
-// 	}
-// });
+	if (streamIndex >= 0) {
+		killStream(streams[streamIndex], () => {
+			streams[streamIndex].paused = true;
+			streams[streamIndex].failed = true;
+			res.redirect('/');
+		}, () => {
+			res.redirect('/');
+		});
+	}
+});
+
+app.post('/replay-stream/:id', (req, res) => {
+	const streamId = parseInt(req.params.id, 10);
+	const streamIndex = streams.findIndex(s => s.id === streamId);
+
+	if (streamIndex >= 0) {
+		const scriptPath = path.join(__dirname, 'start_stream.sh');
+		const command = `bash ${scriptPath} "${streams[streamIndex].processedImagePath}" "${streams[streamIndex].radio}" "${streams[streamIndex].hostPath}"`;
+		const ffmpegProcess = exec(command, { env: process.env }, (error, stdout, stderr) => {
+			if (error) {
+				console.error(`exec error #1: ${error}`);
+
+				streams[streamIndex].failed = true;
+			}
+		});
+
+		streams[streamIndex].process = ffmpegProcess;
+		streams[streamIndex].failed = false;
+		streams[streamIndex].paused = false;
+
+		res.redirect('/');
+	}
+});
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-	console.log(`Server is running on http://localhost:${PORT}`);
+	console.log(`Server is running on http://localhost:${PORT} at ${new Date()}`);
 });

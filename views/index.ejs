@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <h1>Streamagic<sup>ver. 0.0.2</sup></h1>
+    <h1>Streamagic<sup>ver. 0.0.3</sup></h1>
     <form action="/start-stream" method="post" enctype="multipart/form-data">
         <table>
             <tr>
@@ -68,14 +68,27 @@
                         <td>
                             <img src="/<%= stream.imagePath %>" alt="Preview" style="width: 100px; height: auto;">
                         </td>
-                        <td><%= stream.title %></td>
+                        <td>
+                            <div>
+                                <%= stream.title %>
+                            </div>
+                            <div>
+                                <%= stream.radio %>
+                            </div>
+                        </td>
                         <td>
                             <form action="/stop-stream/<%= stream.id %>" method="post" style="display:inline;">
-                                <button type="submit">&times;</button>
+                                <button type="submit">❌</button>
                             </form>
-                            <!--<form action="/reload-stream/<%= stream.id %>" method="post" style="display:inline;">
-                                <button type="submit">&#x21bb;</button>
-                            </form>-->
+                            <% if(stream.paused){ %>
+                                <form action="/replay-stream/<%= stream.id %>" method="post" style="display:inline;">
+                                    <button type="submit">▶️</button>
+                                </form>
+                            <% } else { %>
+                                 <form action="/pause-stream/<%= stream.id %>" method="post" style="display:inline;">
+                                    <button type="submit">⏸️</button>
+                                </form>
+                            <% } %>
                         </td>
                     </tr>
                 <% }) %>
