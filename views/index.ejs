@@ -6,8 +6,11 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <title>Streamagic</title>
     <style>
-        table {
-            border-collapse: collapse;
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #5c16c5;
         }
         sup {
             font-size: 12pt;
@@ -16,34 +19,105 @@
         .failed {
             opacity: .5;
         }
+        label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        input {
+            background: transparent;
+            border: 0;
+            border-bottom: 2px solid #fff;
+            outline: 0;
+        }
+        input[type="file"] {
+            border: 0;
+        }
+        input[type="text"]:active,
+        input[type="text"]:focus {
+            border-bottom: 2px solid #00fa04;
+        }
+        button {
+            background: transparent;
+            border: 1px solid #fff;
+            cursor: pointer
+        }
+        button:active {
+            background: #451093;
+        }
+        button[type="submit"] {
+            margin-top: 10px;
+        }
+        #label-cover {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            background-color: #5c16c5;
+        }
+        a {
+            text-decoration: none;
+        }
+        img {
+            border-radius: 3px;
+        }
+        * {
+            font-family: monospace;
+            color: #fff;
+        }
     </style>
+    <script>
+        function onUpload(el) {
+            document.querySelector('#file-label').innerText = el.value.split(/[\\\/]+/ig).pop() || 'Файл не выбран';
+        }
+    </script>
 </head>
 <body>
-    <h1>Streamagic<sup>ver. 0.0.3</sup></h1>
+    <h1>Streamagic<sup>ver. 0.0.4</sup></h1>
     <form action="/start-stream" method="post" enctype="multipart/form-data">
         <table>
             <tr>
                 <td>
-                    <label for="image">Картинка для стрима</label>
+                    <label for="image">
+                        Картинка для стрима<sup>*</sup>
+                    </label>
                 </td>
                 <td>
-                    <input type="file" name="image" id="image" accept="image/png, image/jpeg" required>
+                    <label for="image">
+                        <input type="file" name="image" id="image" accept="image/png, image/jpeg" onchange="onUpload(this)" required>
+                    
+                        <div id="label-cover">
+                            <button type="button" onclick="image.click()">Выберите файл</button>
+                            &nbsp;
+                            <div id="file-label">
+                                Файл не выбран
+                            </div>
+                        </div>
+                    </label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label for="hostPath">Cервер/Ключ</label>
+                    <label for="description">Описание</label>
                 </td>
                 <td>
-                    <input type="text" name="hostPath" id="hostPath" placeholder="rtmp://somehost.ru/input/1234567890abcdefgh" value="rtmp://[хост]/[ключ]" size="70" required>
+                    <input type="text" name="description" id="description" size="70">
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label for="radio">Аудиопоток</label>
+                    <label for="hostPath">Cервер/Ключ<sup>*</sup></label>
                 </td>
                 <td>
-                    <input type="text" name="radio" id="radio" placeholder="http://stream.antenne.de:80/antenne" value="http://stream.antenne.de:80/antenne" size="70" required>
+                    <input type="text" name="hostPath" id="hostPath" placeholder="rtmp://[хост]/[ключ]" size="70" required>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="radio">Аудиопоток<sup>*</sup></label>
+                </td>
+                <td>
+                    <input type="text" name="radio" id="radio" value="http://stream.antenne.de:80/antenne" size="70" required>
                 </td>
             </tr>
 
@@ -57,7 +131,7 @@
 
     <% if(streams.length > 0){ %>
         <h2>Запущенные стримы</h2>
-        <table border="1">
+        <table border="0" cellspacing="10px">
             <tbody>
                 <% streams.forEach(stream => { %>
                     <tr
@@ -69,6 +143,11 @@
                             <img src="/<%= stream.imagePath %>" alt="Preview" style="width: 100px; height: auto;">
                         </td>
                         <td>
+                            <% if(stream.description){ %>
+                                <div>
+                                    <%= stream.description %>
+                                </div>
+                            <% } %>
                             <div>
                                 <%= stream.title %>
                             </div>
@@ -77,17 +156,17 @@
                             </div>
                         </td>
                         <td>
-                            <form action="/stop-stream/<%= stream.id %>" method="post" style="display:inline;">
-                                <button type="submit">❌</button>
-                            </form>
+                            <a href="/stop-stream/<%= stream.id %>">
+                                ❌
+                            </a>
                             <% if(stream.paused){ %>
-                                <form action="/replay-stream/<%= stream.id %>" method="post" style="display:inline;">
-                                    <button type="submit">▶️</button>
-                                </form>
+                                <a href="/replay-stream/<%= stream.id %>">
+                                    ▶️
+                                </a>
                             <% } else { %>
-                                 <form action="/pause-stream/<%= stream.id %>" method="post" style="display:inline;">
-                                    <button type="submit">⏸️</button>
-                                </form>
+                                 <a href="/pause-stream/<%= stream.id %>">
+                                    ⏸️
+                                </a>
                             <% } %>
                         </td>
                     </tr>

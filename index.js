@@ -71,6 +71,7 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 	const imagePath = req.file.path;
 	const hostPath = req.body.hostPath;
 	const radio = req.body.radio;
+	const description = req.body.description;
 
 	if (!hostPath || hostPath.indexOf('rtmp://') !== 0 || !radio) {
 		return res.redirect('https://www.youtube.com/watch?v=9f8dGAsAlbo');
@@ -120,6 +121,7 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 		process: ffmpegProcess,
 		failed: false,
 		paused: false,
+		description,
 	};
 
 	ffmpegProcess.on('error', (err) => {
@@ -135,7 +137,7 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 	res.redirect('/');
 });
 
-app.post('/stop-stream/:id', (req, res) => {
+app.get('/stop-stream/:id', (req, res) => {
 	const streamId = parseInt(req.params.id, 10);
 	const streamIndex = streams.findIndex(s => s.id === streamId);
 
@@ -157,7 +159,7 @@ app.post('/stop-stream/:id', (req, res) => {
 	}
 });
 
-app.post('/pause-stream/:id', (req, res) => {
+app.get('/pause-stream/:id', (req, res) => {
 	const streamId = parseInt(req.params.id, 10);
 	const streamIndex = streams.findIndex(s => s.id === streamId);
 
@@ -172,7 +174,7 @@ app.post('/pause-stream/:id', (req, res) => {
 	}
 });
 
-app.post('/replay-stream/:id', (req, res) => {
+app.get('/replay-stream/:id', (req, res) => {
 	const streamId = parseInt(req.params.id, 10);
 	const streamIndex = streams.findIndex(s => s.id === streamId);
 
