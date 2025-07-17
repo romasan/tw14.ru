@@ -73,7 +73,11 @@ app.post('/start-stream', upload.single('image'), async (req, res) => {
 	const radio = req.body.radio;
 	const description = req.body.description;
 
-	if (!hostPath || hostPath.indexOf('rtmp://') !== 0 || !radio) {
+	if (
+		!hostPath ||
+		!(hostPath.indexOf('rtmp://') === 0 || hostPath.indexOf('rtmps://') === 0) ||
+		!radio
+	) {
 		return res.redirect('https://www.youtube.com/watch?v=9f8dGAsAlbo');
 	}
 
